@@ -4,8 +4,7 @@ import axios from "axios";
 const PokemonList = () => {
   const [pokemonList, setPokemonList] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [offset, setOffset] = useState(0);
-  const limit = 20;
+  const [page, setPage] = useState(1);
   const listRef = useRef(null);
 
   useEffect(() => {
@@ -20,11 +19,13 @@ const PokemonList = () => {
     setLoading(true);
     try {
       const response = await axios.get(
-        `https://pokeapi.co/api/v2/pokemon?offset=${offset}&limit=${limit}`
+        `https://pokeapi.co/api/v2/pokemon?offset=${(page - 1) * 20}&limit=20`
       );
       const results = response.data.results;
-      setPokemonList((prevList) => [...prevList, ...results]);
-      setOffset((prevOffset) => prevOffset + limit);
+      setPokemonList((prevList) => [
+        ...prevList,
+        ...results.map((pokemon) => pokemon.name),
+      ]);
       setLoading(false);
     } catch (error) {
       console.error("Erro ao buscar lista de Pokémon:", error);
@@ -34,29 +35,40 @@ const PokemonList = () => {
 
   const handleScroll = () => {
     const element = listRef.current;
-    if (element.scrollHeight - element.scrollTop === element.clientHeight) {
-      fetchMorePokemon();
+    if (
+      element.scrollHeight - element.scrollTop === element.clientHeight &&
+      !loading
+    ) {
+      setPage((prevPage) => prevPage + 1); // Incrementa a página para buscar novos Pokémon na próxima requisição
     }
   };
 
-  const fetchMorePokemon = () => {
-    if (!loading) {
-      fetchPokemonList();
+  useEffect(() => {
+    if (page > 1) {
+      fetchPokemonList(); // Chama a função para buscar novos Pokémon sempre que a página for maior que 1
     }
-  };
+  }, [page]);
 
   return (
-    <React.Fragment>
+    <>
       <h2>Lista de Pokémon</h2>
-      <div className="pokemon-list" ref={listRef}>
+      <div
+        className="pokemon-list"
+        ref={listRef}
+        style={{
+          height: "300px", // Altura do div de scroll
+          overflowY: "auto", // Habilita o scroll
+          border: "1px solid #ccc", // Apenas para visualização
+        }}
+      >
         <ul>
-          {pokemonList.map((pokemon, index) => (
-            <li key={index}>{pokemon.name}</li>
+          {pokemonList.map((pokemonName) => (
+            <li key={pokemonName}>{pokemonName}</li>
           ))}
         </ul>
       </div>
       {loading && <p>Carregando...</p>}
-    </React.Fragment>
+    </>
   );
 };
 
