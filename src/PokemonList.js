@@ -4,8 +4,7 @@ import axios from "axios";
 const PokemonList = () => {
   const [pokemonList, setPokemonList] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [offset, setOffset] = useState(0);
-  const limit = 20;
+  const [page, setPage] = useState(1);
   const listRef = useRef(null);
 
   useEffect(() => {
